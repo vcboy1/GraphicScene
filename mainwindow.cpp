@@ -54,7 +54,7 @@ void MainWindow::on_squareBtn_clicked()
 
 void MainWindow::on_rectangleBtn_clicked()
 {
-    BRectangle *m_rectangle = new BRectangle(0, 0, 80, 60, BGraphicsItem::ItemType::Rectangle);
+    BRectangle *m_rectangle = new BRectangle(0, 0, 80*3, 60*7, BGraphicsItem::ItemType::Rectangle);
     m_scene.addItem(m_rectangle);
 }
 
@@ -100,6 +100,7 @@ void MainWindow::on_loadBtn_clicked()
 
 void MainWindow::setBtnEnabled(bool enable)
 {
+/*
     ui->circleBtn->setEnabled(enable);
     ui->ellipseBtn->setEnabled(enable);
     ui->conCircleBtn->setEnabled(enable);
@@ -112,4 +113,5 @@ void MainWindow::setBtnEnabled(bool enable)
     ui->clearBtn->setEnabled(enable);
     ui->saveBtn->setEnabled(enable);
     ui->loadBtn->setEnabled(enable);
+*/
 }

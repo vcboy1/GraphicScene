@@ -37,6 +37,7 @@ protected:
                        QWidget *widget) override;
 
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
     QPointF m_point;

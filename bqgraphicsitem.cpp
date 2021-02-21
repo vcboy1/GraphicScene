@@ -4,6 +4,8 @@
 #include <QMenu>
 #include <QSpinBox>
 #include <QWidgetAction>
+#include <math.h>
+#include <qdebug>
 
 BGraphicsItem::BGraphicsItem(QPointF center, QPointF edge, ItemType type)
     : m_center(center), m_edge(edge), m_type(type)
@@ -265,7 +267,7 @@ void BConcentricCircle::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
             m_edge.setY(m_center.y() + m_radius * sqrt(2)/2);
         }
 
-        m_pointList.at(0)->setPoint(m_edge);
+        this->m_pointList.at(0)->setPoint(m_edge);
         this->hide();
         this->update();
         this->show();
@@ -414,11 +416,20 @@ void BChord::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 //------------------------------------------------------------------------------
 
 BRectangle::BRectangle(qreal x, qreal y, qreal width, qreal height, ItemType type)
-    : BGraphicsItem(QPointF(x,y), QPointF(width/2,height/2), type)
+    : BGraphicsItem(QPointF(x,y), QPointF(width/2,height/2), type),pressNodeIndex(-1)
 {
-    BPointItem *point = new BPointItem(this, m_edge, BPointItem::Edge);
-    point->setParentItem(this);
-    m_pointList.append(point);
+
+    QPointF   n[10];
+
+    calcNode( m_center, m_edge, n,true);
+    for ( int i =0; i < 10; ++i){
+
+        BPointItem *point = new BPointItem(this, n[i], BPointItem::Edge);
+        point->setParentItem(this);
+        m_pointList.append(point);
+    }
+
+
     m_pointList.append(new BPointItem(this, m_center, BPointItem::Center));
     m_pointList.setRandColor();
 }
@@ -427,6 +438,189 @@ QRectF BRectangle::boundingRect() const
 {
     return QRectF(m_center.x() - abs(m_edge.x()), m_center.y() - abs(m_edge.y()), abs(m_edge.x()) * 2, abs(m_edge.y()) * 2);
 }
+
+void   BRectangle::mousePressEvent(QGraphicsSceneMouseEvent *event){
+
+    BGraphicsItem::mousePressEvent(event);
+
+    if ( event->buttons() == Qt::LeftButton ) {
+
+
+        QPointF      n[10];
+        const  qreal limit = 20;
+        QPointF      origin = event->pos() - pos();
+        calcNode( m_center, m_edge, n,false);
+
+        pressNodeIndex = -1;
+        for ( int j = 0; j < 10; ++j)
+            if ( n[j].x() - limit <= origin.x() && origin.x() <= n[j].x() + limit &&
+                 n[j].y() - limit <= origin.y() && origin.y() <= n[j].y() + limit){
+
+              pressNodeIndex  = j;
+              break;
+        }
+
+        qDebug() << n[0] << n[1] << n[2] << n[3] << " : " << origin ;
+        qDebug() << " pressNodeIndex: " << pressNodeIndex;
+    }
+}
+
+/*
+QPainterPath BRectangle::shape() const{
+
+    QPainterPath  path;
+
+    QPointF  p8 = m_pointList[8]->getPoint();
+    QPointF  p9 = m_pointList[9]->getPoint();
+    QPointF  p0 = m_pointList[0]->getPoint();
+    QPointF  p2 = m_pointList[2]->getPoint();
+
+    path.addRect( QRectF(p0 , QPointF(p8.x(),p2.y()) ) );
+    path.addRect( QRectF(QPointF(p9.x(),p0.y()),p2 ) );
+    return path;
+}
+*/
+
+void    BRectangle::calcNode(QPointF c, QPointF e, QPointF* nodes,bool isInit){
+
+    qreal   width = fabs(c.x() - e.x());
+    qreal   height= fabs(c.y() - e.y());
+
+    nodes[0]= c+QPointF(-width,-height) ;
+    nodes[1]= c+QPointF(width,-height) ;
+    nodes[2]= c+QPointF(width,height) ;
+    nodes[3]= c+QPointF(-width,height) ;
+
+    nodes[4]= c+QPointF( 0,-height) ;
+    nodes[5]= c+QPointF(width,0) ;
+    nodes[6]= c+QPointF( 0,height) ;
+    nodes[7]= c+QPointF(-width,0) ;
+
+    if ( isInit ){
+        nodes[8]= c+QPointF(-50,0);
+        nodes[9]= c+QPointF(50,0);
+    }
+    else{
+        nodes[8]= m_pointList[8]->getPoint();
+        nodes[9]= m_pointList[9]->getPoint();
+    }
+
+}
+
+/*
+ *    0    4    1
+ *
+ *    7  8   9  5
+ *
+ *    3    6    2
+ *
+ */
+void  BRectangle::updateSize(QPointF origin, QPointF end){
+/*
+    QPointF   n[10];
+    int    found = -1,j;
+    const  qreal limit = 20;
+
+    origin -= pos();
+    end -= pos();
+
+    calcNode( m_center, m_edge, n,false);
+
+    for ( j = 0; j < 10; ++j)
+        if ( n[j].x() - limit <= origin.x() && origin.x() <= n[j].x() + limit &&
+             n[j].y() - limit <= origin.y() && origin.y() <= n[j].y() + limit){
+            found = j;
+//qDebug() << n[0] << n[1] << n[2] << n[3] << " : " << origin << " - " << end;
+//            qDebug() << " found node index" << j;
+            break;
+        }
+*/
+    QPointF   n[10];
+   const  qreal limit = 20;
+
+    switch(pressNodeIndex){
+
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+
+        calcNode( m_center, end, n,false);
+
+        if ( n[0].x() > n[8].x()){
+            n[0].setX(n[8].x()-limit);
+            n[3].setX(n[8].x()-limit);
+            end.setX(n[8].x()-limit);
+        }
+        if ( n[1].x() < n[9].x()){
+            n[1].setX(n[9].x()+limit);
+            n[2].setX(n[9].x()+limit);
+            end.setX(n[9].x()+limit);
+        }
+
+        for ( int i =0; i < 8; ++i)
+            m_pointList[i]->setPoint(n[i]);
+
+        setEdge(end);
+        break;
+
+    case 4:
+    case 6:
+{
+        qreal   width = fabs(m_center.x() - m_edge.x());
+        qreal   height= fabs(m_center.y() - m_edge.y());
+        auto off_y = end.y() - origin.y();
+
+        if ( pressNodeIndex == 4 )
+           height-=off_y;
+        else
+           height+=off_y;
+        QPointF new_edge(m_center.x() - width, m_center.y() - height );
+
+        calcNode( m_center, new_edge, n,false);
+        for ( int i =0; i < 8; ++i)
+            m_pointList[i]->setPoint(n[i]);
+        setEdge(new_edge);
+}
+        break;
+    case 5:
+    case 7:
+
+    {
+        qreal   width = fabs(m_center.x() - m_edge.x());
+        qreal   height= fabs(m_center.y() - m_edge.y());
+        auto    off_x = end.x() - origin.x();
+
+        if ( pressNodeIndex == 5 )
+           width+=off_x;
+        else
+           width-=off_x;
+        QPointF new_edge(m_center.x() - width, m_center.y() - height );
+
+        calcNode( m_center, new_edge, n,false);
+        for ( int i =0; i < 8; ++i)
+            m_pointList[i]->setPoint(n[i]);
+        setEdge(new_edge);
+    }
+        break;
+
+    case 8:
+{
+        QPointF pos(end.x() > m_center.x()?m_center.x()-limit:end.x(), m_center.y());
+        m_pointList[pressNodeIndex]->setPoint( pos );
+ }
+        break;
+    case 9:
+{
+        QPointF pos(end.x() < m_center.x()?m_center.x()+limit:end.x(), m_center.y());
+        m_pointList[pressNodeIndex]->setPoint( pos );
+ }
+        break;
+    default:
+        break;
+    }
+}
+
 
 void BRectangle::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
@@ -437,7 +631,24 @@ void BRectangle::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 
     QRectF ret(m_center.x() - abs(m_edge.x()), m_center.y() - abs(m_edge.y()), abs(m_edge.x()) * 2, abs(m_edge.y()) * 2);
     painter->drawRect(ret);
+
+
+    QPointF s = m_edge - m_center;
+    QPointF l = m_pointList[8]->getPoint();
+    QPointF r = m_pointList[9]->getPoint();
+
+    QPen pen;// = this->pen();
+    pen.setColor(QColor(255,255,255,128));
+    pen.setStyle(Qt::DashLine);
+    painter->setPen(pen);
+    painter->drawLine( l.x(),  l.y() - fabs(s.y()),
+                       l.x(),  l.y() + fabs(s.y()));
+
+    painter->drawLine( r.x(),  l.y() - fabs(s.y()),
+                       r.x(),  l.y() + fabs(s.y()));
 }
+
+
 
 void BRectangle::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {

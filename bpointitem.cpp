@@ -27,7 +27,27 @@ BPointItem::BPointItem(QAbstractGraphicsShapeItem* parent, QPointF p, PointType 
 
 QRectF BPointItem::boundingRect() const
 {
-    return QRectF(-4, -4, 8, 8);
+    return QRectF(-8, -8, 16, 16);
+}
+
+void BPointItem::mousePressEvent(QGraphicsSceneMouseEvent *event){
+
+    if ( event->buttons() == Qt::LeftButton ) {
+
+        BGraphicsItem* item = static_cast<BGraphicsItem *>(this->parentItem());
+        BGraphicsItem::ItemType itemType = item->getType();
+
+        switch (itemType) {
+
+        case BGraphicsItem::ItemType::Rectangle:
+
+            event->setPos( mapToParent(event->pos()));
+            dynamic_cast<BRectangle *>(item)->mousePressEvent(event);
+            return ;
+        }
+      }
+
+    QAbstractGraphicsShapeItem::mouseMoveEvent(event);
 }
 
 void BPointItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -40,13 +60,13 @@ void BPointItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 
     switch (m_type) {
     case Center:
-        painter->drawEllipse(-4, -4, 8, 8);
+        painter->drawEllipse(-8, -8, 16, 16);
         break;
     case Edge:
-        painter->drawRect(QRectF(-4, -4, 8, 8));
+        painter->drawEllipse(QRectF(-8, -8, 16, 16));
         break;
     case Special:
-        painter->drawRect(QRectF(-4, -4, 8, 8));
+        painter->drawRect(QRectF(-8, -8, 16, 16));
         break;
     default: break;
     }
@@ -102,7 +122,10 @@ void BPointItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             } break;
             case BGraphicsItem::ItemType::Rectangle: {
                 BRectangle *rectangle = dynamic_cast<BRectangle *>(item);
-                rectangle->setEdge(m_point);
+                //rectangle->setEdge(m_point);
+                //rectangle->updateSize();
+                rectangle->updateSize(QPointF(event->lastScenePos().x(), event->lastScenePos().y()),
+                                       QPointF(event->scenePos().x(), event->scenePos().y()));
             } break;
             case BGraphicsItem::ItemType::Square: {
                 BSquare *square = dynamic_cast<BSquare *>(item);

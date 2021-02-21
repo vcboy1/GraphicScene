@@ -163,6 +163,9 @@ class BRectangle : public BGraphicsItem
 public:
     BRectangle(qreal x, qreal y, qreal width, qreal height, ItemType type);
 
+    void    updateSize(QPointF origin, QPointF end);
+
+
 protected:
     virtual QRectF boundingRect() const override;
 
@@ -171,6 +174,17 @@ protected:
                        QWidget *widget) override;
 
     virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+
+public:
+     void   mousePressEvent(QGraphicsSceneMouseEvent *event);
+    //virtual QPainterPath shape() const Q_DECL_OVERRIDE;
+
+
+private:
+
+    void    calcNode(QPointF c, QPointF e, QPointF* nodes,bool isInit);
+
+    int     pressNodeIndex;
 };
 
 //------------------------------------------------------------------------------
