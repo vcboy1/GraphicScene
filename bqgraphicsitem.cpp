@@ -448,7 +448,7 @@ void   BRectangle::mousePressEvent(QGraphicsSceneMouseEvent *event){
 
         QPointF      n[10];
         const  qreal limit = 20;
-        QPointF      origin = event->pos() - pos();
+        QPointF      origin = event->pos();// - pos();
         calcNode( m_center, m_edge, n,false);
 
         pressNodeIndex = -1;
@@ -516,27 +516,9 @@ void    BRectangle::calcNode(QPointF c, QPointF e, QPointF* nodes,bool isInit){
  *
  */
 void  BRectangle::updateSize(QPointF origin, QPointF end){
-/*
+
     QPointF   n[10];
-    int    found = -1,j;
     const  qreal limit = 20;
-
-    origin -= pos();
-    end -= pos();
-
-    calcNode( m_center, m_edge, n,false);
-
-    for ( j = 0; j < 10; ++j)
-        if ( n[j].x() - limit <= origin.x() && origin.x() <= n[j].x() + limit &&
-             n[j].y() - limit <= origin.y() && origin.y() <= n[j].y() + limit){
-            found = j;
-//qDebug() << n[0] << n[1] << n[2] << n[3] << " : " << origin << " - " << end;
-//            qDebug() << " found node index" << j;
-            break;
-        }
-*/
-    QPointF   n[10];
-   const  qreal limit = 20;
 
     switch(pressNodeIndex){
 
@@ -597,6 +579,7 @@ void  BRectangle::updateSize(QPointF origin, QPointF end){
            width-=off_x;
         QPointF new_edge(m_center.x() - width, m_center.y() - height );
 
+
         calcNode( m_center, new_edge, n,false);
         for ( int i =0; i < 8; ++i)
             m_pointList[i]->setPoint(n[i]);
@@ -629,6 +612,19 @@ void BRectangle::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     painter->setPen(this->pen());
     painter->setBrush(this->brush());
 
+
+    QPointF lt = m_pointList[0]->getPoint();
+    QPointF rb = m_pointList[2]->getPoint();
+    QPointF cl = m_pointList[8]->getPoint();
+    QPointF cr = m_pointList[9]->getPoint();
+
+    QRectF lrc(lt, QPointF(cl.x(),rb.y()));
+    painter->drawRect(lrc);
+
+    QRectF rrc(QPointF(cr.x(),lt.y()),rb);
+    painter->drawRect(rrc);
+
+/*
     QRectF ret(m_center.x() - abs(m_edge.x()), m_center.y() - abs(m_edge.y()), abs(m_edge.x()) * 2, abs(m_edge.y()) * 2);
     painter->drawRect(ret);
 
@@ -646,6 +642,7 @@ void BRectangle::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 
     painter->drawLine( r.x(),  l.y() - fabs(s.y()),
                        r.x(),  l.y() + fabs(s.y()));
+*/
 }
 
 
